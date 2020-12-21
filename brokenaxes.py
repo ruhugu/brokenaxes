@@ -12,7 +12,9 @@ __author__ = 'Ben Dichter'
 class BrokenAxes:
     def __init__(self, xlims=None, ylims=None, d=.015, tilt=45,
                  subplot_spec=None, fig=None, despine=True,
-                 xscale=None, yscale=None, diag_color='k',
+                 xscale=None, yscale=None, tick_both_x=False,
+                 tick_both_y=False, xlabel_pos="bottom", 
+                 ylabel_pos="left", diag_color='k',
                  height_ratios=None, width_ratios=None,
                  *args, **kwargs):
         """Creates a grid of axes that act like a single broken axes
@@ -58,6 +60,10 @@ class BrokenAxes:
 
         self.diag_color = diag_color
         self.despine = despine
+        self.xlabel_pos = xlabel_pos
+        self.ylabel_pos = ylabel_pos
+        self.tick_both_x = tick_both_x
+        self.tick_both_y = tick_both_y
         self.d = d
         self.tilt = tilt
 
@@ -215,22 +221,56 @@ class BrokenAxes:
         """Removes the spines of internal axes that are not boarder spines.
         """
         for ax in self.axs:
-            ax.xaxis.tick_bottom()
-            ax.yaxis.tick_left()
+            # Set X-axis label and ticklabel position
+            if self.xlabel_pos == "bottom":
+                is_xlabel_row = ax.is_last_row()
+                is_xlabel_opposite_row = ax.is_first_row()
+                if is_xlabel_row:
+                    ax.xaxis.tick_bottom()
+                elif is_xlabel_opposite_row:
+                    ax.xaxis.tick_top()
+            elif self.xlabel_pos == "top":
+                ax.xaxis.tick_top()
+                is_xlabel_row = ax.is_first_row()
+                is_xlabel_opposite_row = ax.is_last_row()
+                if is_xlabel_row:
+                    ax.xaxis.tick_top()
+                elif is_xlabel_opposite_row:
+                    ax.xaxis.tick_bottom()
+            if not is_xlabel_row:
+                plt.setp(ax.xaxis.get_minorticklabels(), visible=False)
+                plt.setp(ax.xaxis.get_majorticklabels(), visible=False)
+                if not self.tick_both_x:
+                    plt.setp(ax.xaxis.get_minorticklines(), visible=False)
+                    plt.setp(ax.xaxis.get_majorticklines(), visible=False)
+            # Set Y-axis label and ticklabel position
+            if self.ylabel_pos == "left":
+                is_ylabel_col = ax.is_first_col()
+                is_ylabel_opposite_col = ax.is_last_col()
+                if is_ylabel_col:
+                    ax.yaxis.tick_left()
+                elif is_ylabel_opposite_col:
+                    ax.yaxis.tick_right()
+            if self.ylabel_pos == "right":
+                is_ylabel_col = ax.is_last_col()
+                is_ylabel_opposite_col = ax.is_first_col()
+                if is_ylabel_col:
+                    ax.yaxis.tick_right()
+                elif is_ylabel_opposite_col:
+                    ax.yaxis.tick_left()
+            if not is_ylabel_col:
+                plt.setp(ax.yaxis.get_minorticklabels(), visible=False)
+                plt.setp(ax.yaxis.get_majorticklabels(), visible=False)
+                if not self.tick_both_y:
+                    plt.setp(ax.yaxis.get_minorticklines(), visible=False)
+                    plt.setp(ax.yaxis.get_majorticklines(), visible=False)
+            # Set axes spines
             if not ax.is_last_row():
                 ax.spines['bottom'].set_visible(False)
-                plt.setp(ax.xaxis.get_minorticklabels(), visible=False)
-                plt.setp(ax.xaxis.get_minorticklines(), visible=False)
-                plt.setp(ax.xaxis.get_majorticklabels(), visible=False)
-                plt.setp(ax.xaxis.get_majorticklines(), visible=False)
             if self.despine or not ax.is_first_row():
                 ax.spines['top'].set_visible(False)
             if not ax.is_first_col():
                 ax.spines['left'].set_visible(False)
-                plt.setp(ax.yaxis.get_minorticklabels(), visible=False)
-                plt.setp(ax.yaxis.get_minorticklines(), visible=False)
-                plt.setp(ax.yaxis.get_majorticklabels(), visible=False)
-                plt.setp(ax.yaxis.get_majorticklines(), visible=False)
             if self.despine or not ax.is_last_col():
                 ax.spines['right'].set_visible(False)
 
